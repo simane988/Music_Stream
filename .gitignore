@@ -124,7 +124,7 @@ dmypy.json
 .pyre/
 
 media/
-src/sample.log
-src/conf.ini
+src/*.log
+src/*.ini
 .gitignore
 .idea/

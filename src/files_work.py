@@ -1,33 +1,21 @@
 import os
 import time
 import cv2
-import mutagen.mp3
 import logging
-import src.music as music
-from definitions import ROOT_DIR
+import configparser
 
 
-def extract_covers(track_path, covers_path):
-    local_file = track_path
-    covers_dir = covers_path
-    cover_name = music.get_name(track_path) + '.jpg'
+def conf_log():
+    logging.basicConfig(filename='Music_stream.log', level=logging.DEBUG)
 
+
+def get_conf():
     try:
-        tags = mutagen.mp3.Open(local_file)
-        data = ""
-        for i in tags:
-            if i.startswith("APIC"):
-                data = tags[i].data
-                break
-        if not data:
-            return False
-        else:
-            with open(covers_dir + cover_name, "wb") as cover:
-                cover.write(data)
-                return True
+        config = configparser.ConfigParser()
+        config.read(os.path.dirname(os.path.abspath(__file__)) + '/conf.ini')
+        return config
     except:
-        logging.error('extract_cover: File \"%s\" not found in %s', local_file, covers_dir)
-        return False
+        logging.error('get_conf: Can\'t read config file %s' % os.path.dirname(os.path.abspath(__file__)) + '/conf.ini')
 
 
 def is_dir_empty(inp_path):
@@ -44,16 +32,15 @@ def clear_dir(inp_path):
         os.remove(inp_path+'/'+i)
 
 
-def video_to_frames(input_loc=ROOT_DIR+'/media/video/1.mp4', output_loc=ROOT_DIR+'/media/img/'):
+def video_to_frames(input_loc, output_loc):
+    conf = get_conf()
     try:
-        os.mkdir(output_loc)
+        os.mkdir(conf['paths']['img_path'])
     except OSError:
         pass
 
     time_start = time.time()
-
     cap = cv2.VideoCapture(input_loc)
-
     video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
     print("Number of frames: ", video_length)
     count = 0
@@ -77,23 +64,31 @@ def create_conf(path=os.path.dirname(os.path.abspath(__file__))):
     file.write('[default]\n'
                'first_start = 1\n'
                'project_name = Music_Stream\n'
-               'version = 0.0.1a\n'
-               '')
+               'version = 0.0.1 prealpha\n'
+               'github_link = https://github.com/simane988/Music_Stream\n'
+               'license = Apache License 2.0\n'
+               'DEBUG = 0\n'
+               '\n')
     file.write('[paths]\n'
                f'project_path = {project_path}\n'
                f'src_path = {project_path}/src\n'
                f'video_path = {project_path}/media/video\n'
                f'img_path = {project_path}/media/img\n'
                f'music_path = {project_path}/media/music\n'
-               f'covers_path = {project_path}/media/covers\n'
+               f'tmp_path = {project_path}/media/tmp\n'
                f'\n')
     file.write('[video]\n'
+               'src = None\n'
                'width = 1920\n'
                'height = 1080\n'
-               'fps = 30')
+               'fps = 30\n'
+               'font_size = 30\n'
+               '\n')
     print(file.read())
     file.close()
 
 
 if __name__ == "__main__":
+    # clear_dir('/home/g3ck0/Code/Python/Music_Stream/media/img/')
+    # video_to_frames('/home/g3ck0/Code/Python/Music_Stream/media/video/7TwT.gif', '/home/g3ck0/Code/Python/Music_Stream/media/img/')
     create_conf()
